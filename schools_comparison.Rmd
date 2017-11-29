@@ -1,0 +1,73 @@
+---
+title: "quick_look"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# load library
+
+```{r}
+library(tidyverse)
+library(readxl)
+library(stringr)
+library(ggplot2)
+```
+
+
+
+
+```{r read_data}
+path <- 'district_means_grade_equivalent_std.xlsx'
+dfs <- path %>% 
+  excel_sheets() %>% 
+  set_names() %>% 
+  map(read_excel, path = path)
+```
+
+# the nice way
+```{r}
+df <- path %>% 
+  excel_sheets() %>% 
+  set_names() %>% 
+map_df(~ read_excel(path = path, sheet = .x), .id = "sheet")
+
+
+```
+
+```{r}
+df %>% glimpse()
+```
+
+```{r}
+my_districts <- c("ORLEANS PARISH","CITY OF CHICAGO SD 299","DISTRICT OF COLUMBIA PUBLIC SCHOOLS")
+
+(df_out <- df %>%
+    mutate(year = `spring of tested year`,
+           district = `education agency name`,
+           ela = `Estimated District Mean in ela: grade equivalent std (gs)`,
+           ela_se =  `Estimated District Mean SE in ela: grade equivalent std (gs)`,
+           math = `Estimated District Mean in math: grade equivalent std (gs)`,
+           math_se = `Estimated District Mean SE in math: grade equivalent std (gs)`) %>%
+    filter(district %in% my_districts) %>%
+    arrange(district) %>%
+    write_csv('chicago_comparisons.csv')
+  
+)
+   
+# mutate(year = str_extract(sheet, '[0-9]{4}))
+ 
+   
+
+```
+
+```{r}
+df_out %>% ggplot(aes(x = year, y = math, color = district)) + geom_line()  + facet_wrap(~grade)
+```
+
+```{r}
+df_out %>% glimpse()
+```
+
