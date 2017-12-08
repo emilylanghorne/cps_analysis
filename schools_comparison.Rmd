@@ -20,11 +20,11 @@ library(ggplot2)
 
 
 ```{r read_data}
-path <- 'district_means_grade_equivalent_std.xlsx'
-dfs <- path %>% 
-  excel_sheets() %>% 
-  set_names() %>% 
-  map(read_excel, path = path)
+# path <- 'district_means_grade_equivalent_std.xlsx'
+# dfs <- path %>% 
+#   excel_sheets() %>% 
+#   set_names() %>% 
+#   map(read_excel, path = path)
 ```
 
 # the nice way
@@ -42,7 +42,7 @@ df %>% glimpse()
 ```
 
 ```{r}
-my_districts <- c("ORLEANS PARISH","CITY OF CHICAGO SD 299","DISTRICT OF COLUMBIA PUBLIC SCHOOLS")
+my_districts <- c("ORLEANS PARISH","CITY OF CHICAGO SD 299","DISTRICT OF COLUMBIA PUBLIC SCHOOLS", "RECOVERY SCHOOL DISTRICT-LDE")
 
 (df_out <- df %>%
     mutate(year = `spring of tested year`,
@@ -62,12 +62,30 @@ my_districts <- c("ORLEANS PARISH","CITY OF CHICAGO SD 299","DISTRICT OF COLUMBI
    
 
 ```
-
 ```{r}
-df_out %>% ggplot(aes(x = year, y = math, color = district)) + geom_line()  + facet_wrap(~grade)
+df %>% View
 ```
 
 ```{r}
-df_out %>% glimpse()
+df_out %>% ggplot(aes(x = year, y = math, color = district)) +
+  geom_line()  +
+  facet_wrap(~grade) +
+  theme(axis.text.x=element_text(angle=45,hjust=1)) +
+  ylab('Normalized math-score')
+ggsave('schools.png', plot = last_plot(), device = NULL, path = NULL,
+  scale = 1, width = NA, height = NA, units = c("in", "cm", "mm"),
+  dpi = 300, limitsize = TRUE)
 ```
 
+
+```{r}
+df_out %>% ggplot(aes(x = year, y = ela, color = district)) +
+  geom_line()  +
+  facet_wrap(~grade)+
+  theme(axis.text.x=element_text(angle=45,hjust=1)) +
+  geom_errorbar(aes(ymin = ela - ela_se,ymax = ela + ela_se)) +
+  ylab('Normalized ela-score')
+ggsave('schools_ela.png', plot = last_plot(), device = NULL, path = NULL,
+  scale = 1, width = NA, height = NA, units = c("in", "cm", "mm"),
+  dpi = 300, limitsize = TRUE)
+```
