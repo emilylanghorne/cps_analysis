@@ -1,0 +1,69 @@
+---
+title: "revamp"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# load library
+
+```{r}
+library(tidyverse)
+library(readxl)
+library(stringr)
+library(ggplot2)
+library(haven)
+```
+
+
+
+
+```{r read_dta}
+# data at : https://stacks.stanford.edu/file/druid:db586ns4974/SEDA_geodist_long_CS_v20.dta
+df_dta <- read_dta('~/Downloads/SEDA_geodist_long_CS_v20.dta')
+```
+
+```{r}
+df_dta %>% glimpse()
+```
+
+
+
+```{r}
+my_districts <- c("ORLEANS PARISH","CITY OF CHICAGO SD 299","DISTRICT OF COLUMBIA PUBLIC SCHOOLS", "RECOVERY SCHOOL DISTRICT-LDE")
+
+df_out <- df_dta %>%
+    mutate(leaname_upper = str_to_upper(leaname)) %>%
+    filter(leaname_upper %in% my_districts) %>%
+    arrange(leaname)  
+
+  
+```
+
+
+```{r}
+df_out %>% ggplot(aes(x = year, y = mn_all, color = leaname)) +
+  geom_line()  +
+  facet_grid(subject~grade) +
+  theme(axis.text.x=element_text(angle=45,hjust=1)) +
+  geom_ribbon(aes(ymin = mn_all - mn_all_se,ymax = mn_all + mn_all_se)) 
+  
+ggsave('schools_v2.png', plot = last_plot(), device = NULL, path = NULL,
+  scale = 1, width = NA, height = NA, units = c("in", "cm", "mm"),
+  dpi = 300, limitsize = TRUE)
+```
+
+# The wrong graph without error bars:
+```{r}
+df_out %>% ggplot(aes(x = year, y = mn_all, color = leaname)) +
+  geom_line()  +
+  facet_grid(subject~grade) +
+  theme(axis.text.x=element_text(angle=45,hjust=1)) 
+
+  
+ggsave('schools_v2_without_errorbars.png', plot = last_plot(), device = NULL, path = NULL,
+  scale = 1, width = NA, height = NA, units = c("in", "cm", "mm"),
+  dpi = 300, limitsize = TRUE)
+```
