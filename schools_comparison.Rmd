@@ -1,5 +1,5 @@
 ---
-title: "quick_look"
+title: "Schools_Comparison"
 output: html_document
 ---
 
@@ -7,85 +7,69 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# load library
+## Load the libraries
 
 ```{r}
 library(tidyverse)
 library(readxl)
 library(stringr)
 library(ggplot2)
+library(haven)
+```
+## Analysis
+Data published [here](https://cepa.stanford.edu/seda/download?nid=2016&destination=node/2021#testscore) by SEDA
+
+```{r read_dta}
+df_dta <- read_dta('~/Downloads/SEDA_geodist_long_GCS_v20.dta')
 ```
 
 
-
-
-```{r read_data}
-# path <- 'district_means_grade_equivalent_std.xlsx'
-# dfs <- path %>% 
-#   excel_sheets() %>% 
-#   set_names() %>% 
-#   map(read_excel, path = path)
-```
-
-# the nice way
+We only want to look at three districts so let's filter out the rest of them:
 ```{r}
-df <- path %>% 
-  excel_sheets() %>% 
-  set_names() %>% 
-map_df(~ read_excel(path = path, sheet = .x), .id = "sheet")
+my_districts <- c("ORLEANS PARISH","CITY OF CHICAGO SD 299","DISTRICT OF COLUMBIA PUBLIC SCHOOLS")
 
-
+df_out <- df_dta %>%
+    mutate(leaname_upper = str_to_upper(leaname)) %>%
+    filter(leaname_upper %in% my_districts) %>%
+    arrange(leaname)  
 ```
 
-```{r}
-df %>% glimpse()
+
+We won't include 2015, because it was a year of new assessments.
+```{r subset_data}
+df_out_subset <- df_out %>% filter(!year %in% c(2015))
+df_out_subset %>% glimpse()
 ```
 
-```{r}
-my_districts <- c("ORLEANS PARISH","CITY OF CHICAGO SD 299","DISTRICT OF COLUMBIA PUBLIC SCHOOLS", "RECOVERY SCHOOL DISTRICT-LDE")
-
-(df_out <- df %>%
-    mutate(year = `spring of tested year`,
-           district = `education agency name`,
-           ela = `Estimated District Mean in ela: grade equivalent std (gs)`,
-           ela_se =  `Estimated District Mean SE in ela: grade equivalent std (gs)`,
-           math = `Estimated District Mean in math: grade equivalent std (gs)`,
-           math_se = `Estimated District Mean SE in math: grade equivalent std (gs)`) %>%
-    filter(district %in% my_districts) %>%
-    arrange(district) %>%
-    write_csv('chicago_comparisons.csv')
-  
-)
-   
-# mutate(year = str_extract(sheet, '[0-9]{4}))
- 
-   
-
-```
-```{r}
-df %>% View
-```
-
-```{r}
-df_out %>% ggplot(aes(x = year, y = math, color = district)) +
+Here is a plot of the filtered data by grade and year:
+```{r plot_scores}
+df_out_subset %>% ggplot(aes(x = year, y = mn_all, color = leaname)) +
   geom_line()  +
-  facet_wrap(~grade) +
-  theme(axis.text.x=element_text(angle=45,hjust=1)) +
-  ylab('Normalized math-score')
-ggsave('schools.png', plot = last_plot(), device = NULL, path = NULL,
+  facet_grid(subject~grade) +
+  theme(axis.text.x=element_text(angle=45,hjust=1)) + scale_x_continuous(breaks=c(2008,2010,2012,2014)) +
+  ylab('Mean Score of All Students') + xlab('Year') + labs(color = "District") 
+```
+
+
+```{r save_scores_plot, echo=FALSE,results='hide'}
+ggsave('comparisonofdistricts.png', plot = last_plot(), device = NULL, path = NULL,
   scale = 1, width = NA, height = NA, units = c("in", "cm", "mm"),
   dpi = 300, limitsize = TRUE)
 ```
 
-
+If we add in error bars (standard error):
 ```{r}
-df_out %>% ggplot(aes(x = year, y = ela, color = district)) +
+df_out_subset%>% ggplot(aes(x = year, y = mn_all, color = leaname)) +
   geom_line()  +
-  facet_wrap(~grade)+
-  theme(axis.text.x=element_text(angle=45,hjust=1)) +
-  geom_errorbar(aes(ymin = ela - ela_se,ymax = ela + ela_se)) +
-  ylab('Normalized ela-score')
-ggsave('schools_ela.png', plot = last_plot(), device = NULL, path = NULL,
+  facet_grid(subject~grade) +
+  theme(axis.text.x=element_text(angle=45,hjust=1)) + scale_x_continuous(breaks=c(2008,2010,2012,2014)) +
+  ylab('Mean Score of All Students') + xlab('Year') + labs(color = "District") +
+  geom_ribbon(aes(ymin = mn_all - mn_all_se,ymax = mn_all + mn_all_se)) 
+```
+
+
+```{r,echo=FALSE,results='hide'}
+ggsave('comparionofdistictswitherrorbars.png', plot = last_plot(), device = NULL, path = NULL,
   scale = 1, width = NA, height = NA, units = c("in", "cm", "mm"),
   dpi = 300, limitsize = TRUE)
 ```
