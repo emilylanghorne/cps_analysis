@@ -55,15 +55,3 @@ ggsave('schools_v2.png', plot = last_plot(), device = NULL, path = NULL,
   dpi = 300, limitsize = TRUE)
 ```
 
-# The wrong graph without error bars:
-```{r}
-df_out %>% ggplot(aes(x = year, y = mn_all, color = leaname)) +
-  geom_line()  +
-  facet_grid(subject~grade) +
-  theme(axis.text.x=element_text(angle=45,hjust=1)) 
-
-  
-ggsave('schools_v2_without_errorbars.png', plot = last_plot(), device = NULL, path = NULL,
-  scale = 1, width = NA, height = NA, units = c("in", "cm", "mm"),
-  dpi = 300, limitsize = TRUE)
-```
