@@ -1,6 +1,8 @@
 ---
 title: "Schools_Comparison"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -20,7 +22,7 @@ library(haven)
 Data published [here](https://cepa.stanford.edu/seda/download?nid=2016&destination=node/2021#testscore) by SEDA
 
 ```{r read_dta}
-df_dta <- read_dta('~/Downloads/SEDA_geodist_long_GCS_v20.dta')
+df_dta <- read_dta('SEDA_geodist_long_GCS_v20.dta')
 ```
 
 
