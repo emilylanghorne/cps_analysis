@@ -1,5 +1,5 @@
 ---
-title: "revamp"
+title: "Schools_Comparison.3"
 output: html_document
 ---
 
@@ -7,7 +7,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# load library
+## load library
 
 ```{r}
 library(tidyverse)
@@ -17,41 +17,52 @@ library(ggplot2)
 library(haven)
 ```
 
-
-
+## load data from: https://cepa.stanford.edu/seda/download?nid=2016&destination=node/2021#testscore
 
 ```{r read_dta}
-# data at : https://stacks.stanford.edu/file/druid:db586ns4974/SEDA_geodist_long_CS_v20.dta
-df_dta <- read_dta('~/Downloads/SEDA_geodist_long_CS_v20.dta')
+df_dta <- read_dta('~/Downloads/SEDA_geodist_long_GCS_v20.dta')
 ```
 
+## look at data frame
 ```{r}
 df_dta %>% glimpse()
 ```
-
-
+## filter for years 2009 - 2014
+```{r}
+  subset(df_out, year < 2015)
+```
+## rename data set without 2015
 
 ```{r}
-my_districts <- c("ORLEANS PARISH","CITY OF CHICAGO SD 299","DISTRICT OF COLUMBIA PUBLIC SCHOOLS", "RECOVERY SCHOOL DISTRICT-LDE")
-
-df_out <- df_dta %>%
-    mutate(leaname_upper = str_to_upper(leaname)) %>%
-    filter(leaname_upper %in% my_districts) %>%
-    arrange(leaname)  
-
-  
+df_out_subset <- subset(df_out, year < 2015)
 ```
 
-
+## plot df_out_subset
 ```{r}
-df_out %>% ggplot(aes(x = year, y = mn_all, color = leaname)) +
+df_out_subset %>% ggplot(aes(x = year, y = mn_all, color = leaname)) +
   geom_line()  +
   facet_grid(subject~grade) +
-  theme(axis.text.x=element_text(angle=45,hjust=1)) +
-  geom_ribbon(aes(ymin = mn_all - mn_all_se,ymax = mn_all + mn_all_se)) 
-  
-ggsave('schools_v2.png', plot = last_plot(), device = NULL, path = NULL,
+  theme(axis.text.x=element_text(angle=45,hjust=1)) + scale_x_continuous(breaks=c(2008,2010,2012,2014)) +
+  ylab('Mean Score of All Students') + xlab('Year') + labs(color = "District") 
+```
+## save plots as png image
+```{r}
+ggsave('comparisonofdistricts.png', plot = last_plot(), device = NULL, path = NULL,
   scale = 1, width = NA, height = NA, units = c("in", "cm", "mm"),
   dpi = 300, limitsize = TRUE)
 ```
-
+## add error bars to plots
+```{r}
+df_out_subset%>% ggplot(aes(x = year, y = mn_all, color = leaname)) +
+  geom_line()  +
+  facet_grid(subject~grade) +
+  theme(axis.text.x=element_text(angle=45,hjust=1)) + scale_x_continuous(breaks=c(2008,2010,2012,2014)) +
+  ylab('Mean Score of All Students') + xlab('Year') + labs(color = "District") +
+  geom_ribbon(aes(ymin = mn_all - mn_all_se,ymax = mn_all + mn_all_se)) 
+```
+## save plots with error bars as png image
+```{r}
+ggsave('comparionofdistictswitherrorbars.png', plot = last_plot(), device = NULL, path = NULL,
+  scale = 1, width = NA, height = NA, units = c("in", "cm", "mm"),
+  dpi = 300, limitsize = TRUE)
+```
